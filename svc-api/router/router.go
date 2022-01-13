@@ -156,20 +156,21 @@ func Router() *iris.Application {
 	}
 
 	cs := handle.CompositionServiceRPCs{
-		GetCompositionServiceRPC:      rpc.GetCompositionService,
-		GetResourceBlockCollectionRPC: rpc.GetResourceBlockCollection,
-		GetResourceBlockRPC:           rpc.GetResourceBlock,
-		CreateResourceBlockRPC:        rpc.CreateResourceBlock,
-		DeleteResourceBlockRPC:        rpc.DeleteResourceBlock,
-		GetResourceZoneCollectionRPC:  rpc.GetResourceZoneCollection,
-		GetResourceZoneRPC:            rpc.GetResourceZone,
-		CreateResourceZoneRPC:         rpc.CreateResourceZone,
-		DeleteResourceZoneRPC:         rpc.DeleteResourceZone,
-		ComposeRPC:                    rpc.Compose,
-		GetActivePoolRPC:              rpc.GetActivePool,
-		GetFreePoolRPC:                rpc.GetFreePool,
-		GetCompositionReservationsRPC: rpc.GetCompositionReservations,
-		CreateAllResourceBlocksRPC:    rpc.CreateAllResourceBlocks,
+		GetCompositionServiceRPC:         rpc.GetCompositionService,
+		GetResourceBlockCollectionRPC:    rpc.GetResourceBlockCollection,
+		GetResourceBlockRPC:              rpc.GetResourceBlock,
+		CreateResourceBlockRPC:           rpc.CreateResourceBlock,
+		DeleteResourceBlockRPC:           rpc.DeleteResourceBlock,
+		GetResourceZoneCollectionRPC:     rpc.GetResourceZoneCollection,
+		GetResourceZoneRPC:               rpc.GetResourceZone,
+		CreateResourceZoneRPC:            rpc.CreateResourceZone,
+		DeleteResourceZoneRPC:            rpc.DeleteResourceZone,
+		ComposeRPC:                       rpc.Compose,
+		GetActivePoolRPC:                 rpc.GetActivePool,
+		GetFreePoolRPC:                   rpc.GetFreePool,
+		GetCompositionReservationsRPC:    rpc.GetCompositionReservations,
+		CreateAllResourceBlocksRPC:       rpc.CreateAllResourceBlocks,
+		CreateCompositionServiceEventRPC: rpc.CreateCompositionServiceEvent,
 	}
 
 	registryFile := handle.Registry{
@@ -479,6 +480,7 @@ func Router() *iris.Application {
 	events.Any("/Actions", handle.EvtMethodNotAllowed)
 	events.Any("/Actions/EventService.SubmitTestEvent", handle.EvtMethodNotAllowed)
 	events.Any("/Subscriptions", handle.EvtMethodNotAllowed)
+	events.Post("/CompositionServiceEvent", cs.CreateCompositionServiceEvent)
 
 	fabrics := v1.Party("/Fabrics", middleware.SessionDelMiddleware)
 	fabrics.SetRegisterRule(iris.RouteSkip)

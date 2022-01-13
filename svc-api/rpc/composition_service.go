@@ -218,3 +218,19 @@ func CreateAllResourceBlocks(req compositionserviceproto.CreateCompositionResour
 	}
 	return resp, nil
 }
+
+// CreateCompositionServiceEvent will do the rpc call to Composition service event
+func CreateCompositionServiceEvent(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error) {
+	fmt.Errorf("In rpcs compositon service event")
+	conn, err := services.ODIMService.Client(services.CompositionService)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create client connection: %v", err)
+	}
+	defer conn.Close()
+	csService := compositionserviceproto.NewCompositionClient(conn)
+	resp, err := csService.CreateCompositionResource(context.TODO(), &req)
+	if err != nil {
+		return nil, fmt.Errorf("error: RPC error: %v", err)
+	}
+	return resp, nil
+}

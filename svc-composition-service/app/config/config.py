@@ -18,6 +18,7 @@ PLUGIN_CONFIG = {
     "SocketTimeout": 10,
     "LogPath": "",
     "RedisAddress": "",
+    "ManualEvent": False,
     "PrivateKeyPath": "",
     "CertificatePath": "",
     "RootCAPath": "",

@@ -18,20 +18,21 @@ import (
 
 // CompositionServiceRPCs defines all the RPC methods in compositon service
 type CompositionServiceRPCs struct {
-	GetCompositionServiceRPC      func(req compositionserviceproto.GetCompositionServiceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	GetResourceBlockCollectionRPC func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	GetResourceBlockRPC           func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	CreateResourceBlockRPC        func(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	DeleteResourceBlockRPC        func(req compositionserviceproto.DeleteCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	GetResourceZoneCollectionRPC  func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	GetResourceZoneRPC            func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	CreateResourceZoneRPC         func(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	DeleteResourceZoneRPC         func(req compositionserviceproto.DeleteCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	ComposeRPC                    func(req compositionserviceproto.ComposeRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	GetActivePoolRPC              func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	GetFreePoolRPC                func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	GetCompositionReservationsRPC func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
-	CreateAllResourceBlocksRPC    func(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetCompositionServiceRPC         func(req compositionserviceproto.GetCompositionServiceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetResourceBlockCollectionRPC    func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetResourceBlockRPC              func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	CreateResourceBlockRPC           func(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	DeleteResourceBlockRPC           func(req compositionserviceproto.DeleteCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetResourceZoneCollectionRPC     func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetResourceZoneRPC               func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	CreateResourceZoneRPC            func(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	DeleteResourceZoneRPC            func(req compositionserviceproto.DeleteCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	ComposeRPC                       func(req compositionserviceproto.ComposeRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetActivePoolRPC                 func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetFreePoolRPC                   func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	GetCompositionReservationsRPC    func(req compositionserviceproto.GetCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	CreateAllResourceBlocksRPC       func(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
+	CreateCompositionServiceEventRPC func(req compositionserviceproto.CreateCompositionResourceRequest) (*compositionserviceproto.CompositionServiceResponse, error)
 }
 
 //GetCompositionService fetches all composition service
@@ -575,6 +576,63 @@ func (cs *CompositionServiceRPCs) CreateAllResourceBlocks(ctx iris.Context) {
 	}
 
 	resp, err := cs.CreateAllResourceBlocksRPC(blockReq)
+	if err != nil {
+		errorMessage := "RPC error:" + err.Error()
+		log.Error(errorMessage)
+		response := common.GeneralError(http.StatusInternalServerError, response.InternalError, errorMessage, nil, nil)
+		ctx.StatusCode(http.StatusInternalServerError)
+		ctx.JSON(&response.Body)
+		return
+	}
+
+	common.SetResponseHeader(ctx, resp.Header)
+	ctx.StatusCode(int(resp.StatusCode))
+	json.Unmarshal(resp.Body, &res)
+	ctx.JSON(res)
+}
+
+// CreateCompositionServiceEvent Create a Event for composition Service
+func (cs *CompositionServiceRPCs) CreateCompositionServiceEvent(ctx iris.Context) {
+	log.Error("In CreateCompositionServiceEvent")
+	defer ctx.Next()
+	var req interface{}
+	var res interface{}
+	err := ctx.ReadJSON(&req)
+	if err != nil {
+		errorMessage := "error while trying to get JSON body from the create Composition Service Event request body: " + err.Error()
+		log.Error(errorMessage)
+		response := common.GeneralError(http.StatusBadRequest, response.MalformedJSON, errorMessage, nil, nil)
+		ctx.StatusCode(http.StatusBadRequest)
+		ctx.JSON(&response.Body)
+		return
+	}
+	request, err := json.Marshal(req)
+	if err != nil {
+		errorMessage := "error while trying to create JSON request body: " + err.Error()
+		log.Error(errorMessage)
+		response := common.GeneralError(http.StatusInternalServerError, response.InternalError, errorMessage, nil, nil)
+		ctx.StatusCode(http.StatusInternalServerError)
+		ctx.JSON(&response.Body)
+		return
+	}
+
+	// sessionToken := ctx.Request().Header.Get("X-Auth-Token")
+	// if sessionToken == "" {
+	// 	errorMessage := "error: no X-Auth-Token found in request header"
+	// 	log.Error(errorMessage)
+	// 	response := common.GeneralError(http.StatusUnauthorized, response.NoValidSession, errorMessage, nil, nil)
+	// 	ctx.StatusCode(http.StatusUnauthorized)
+	// 	ctx.JSON(&response.Body)
+	// 	return
+	// }
+
+	blockReq := compositionserviceproto.CreateCompositionResourceRequest{
+		// SessionToken: sessionToken,
+		RequestBody: request,
+		URL:         ctx.Request().RequestURI,
+	}
+
+	resp, err := cs.CreateCompositionServiceEventRPC(blockReq)
 	if err != nil {
 		errorMessage := "RPC error:" + err.Error()
 		log.Error(errorMessage)

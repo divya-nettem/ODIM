@@ -8,6 +8,7 @@ from rest.resource_zones import ResourceZones
 from rest.resource_blocks import ResourceBlocks
 from rest.pool import ResourcePool
 from rest.composition_service import CompositonService
+from rest.event_listener import EventListener
 
 
 class CompositionServiceRpc(pb2_grpc.CompositionServicer):
@@ -17,6 +18,7 @@ class CompositionServiceRpc(pb2_grpc.CompositionServicer):
         self.resourcezone = ResourceZones()
         self.resourceblock = ResourceBlocks()
         self.pool = ResourcePool()
+        self.event_listener = EventListener()
 
     def __str__(self):
         return self.__class__.__name__
@@ -96,6 +98,10 @@ class CompositionServiceRpc(pb2_grpc.CompositionServicer):
             # Initialize all Resource Blocks
             elif segments[-1] == "ResourceBlock.Initialize":
                 self.resourceblock.initialize()
+            
+            elif segments[-1] == "CompositionServiceEvent":
+                logging.info("in composition service event")
+                response, code = self.event_listener.listener(json.loads(str(request.RequestBody.decode("utf-8"))))
 
         return pb2.CompositionServiceResponse(statusCode=code,
                                               body=bytes(
